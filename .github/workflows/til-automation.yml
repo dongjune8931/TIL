@@ -1,0 +1,72 @@
+name: TIL Automation
+
+on:
+  # 수동 트리거
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: '강제 실행'
+        required: false
+        default: 'false'
+  
+  # 매일 밤 11시 30분 자동 실행 (한국시간 기준)
+  schedule:
+    - cron: '30 14 * * *'  # UTC 14:30 = KST 23:30
+
+jobs:
+  process-til:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: ⚙️ Configure git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+      
+      - name: 🤖 Process TIL with OpenAI
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd scripts
+          python process-til.py
+      
+      - name: 📊 Check for changes
+        id: verify_diff
+        run: |
+          git diff --quiet . || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: 💾 Commit and push changes
+        if: steps.verify_diff.outputs.changed == 'true'
+        run: |
+          git add .
+          git commit -m "📝 Add TIL $(date +'%Y-%m-%d')"
+          git push
+      
+      - name: ✅ No changes
+        if: steps.verify_diff.outputs.changed != 'true'
+        run: echo "변경사항이 없습니다."
+      
+      - name: 📢 Notify completion
+        if: always()
+        run: |
+          echo "TIL 자동화 프로세스 완료!"
+          echo "상태: ${{ job.status }}"
+
