@@ -79,6 +79,29 @@ class OpenAIHandler:
 (추가로 알면 좋은 관련 지식, 주의사항, 베스트 프랙티스 등)
 """
     
+    def generate_summary(self, til_data):
+        """TIL 한줄요약 생성"""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "개발 학습 내용을 한 문장으로 요약해주세요. 30자 이내로, 핵심만 간결하게 작성하세요. 마크다운이나 특수문자 없이 순수 텍스트로만 작성하세요."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"제목: {til_data['title']}\n내용:\n{til_data['content']}"
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=100
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"한줄요약 생성 에러: {e}")
+            return til_data['title']
+
     def _format_final_markdown(self, til_data, refined_content):
         """최종 마크다운 형식 생성"""
         date = til_data['date']

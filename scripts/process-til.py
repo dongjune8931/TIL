@@ -58,20 +58,25 @@ def main():
         # OpenAI로 내용 정제
         print("\n🤖 OpenAI로 내용 정제 중...")
         refined_content = openai.refine_til_content(til_data)
-        
+
         if not refined_content:
             print("❌ 내용 정제에 실패했습니다.")
             continue
-        
+
         print("✅ 내용 정제 완료")
-        
+
+        # 한줄요약 생성
+        print("📝 한줄요약 생성 중...")
+        summary = openai.generate_summary(til_data)
+        print(f"✅ 한줄요약: {summary}")
+
         # GitHub에 저장
         print("\n💾 GitHub에 저장 중...")
         file_path = github.save_til(til_data, refined_content)
-        
+
         if file_path:
             # README 업데이트
-            github.update_readme(til_data, file_path)
+            github.update_readme(til_data, file_path, summary)
             
             # Notion 상태 업데이트
             notion.update_page_status(page["id"], "발행완료")

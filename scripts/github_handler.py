@@ -33,17 +33,17 @@ class GitHubHandler:
             print(f"❌ 파일 저장 에러: {e}")
             return None
     
-    def update_readme(self, til_data, file_path):
+    def update_readme(self, til_data, file_path, summary=None):
         """README.md 업데이트 (최신 TIL 목록 추가)"""
-        readme_path = Path(self.base_path) / "README.md"
-        
+        readme_path = Path("../README.md")
+
         # 새 항목
         date = til_data['date']
         title = til_data['title']
         category = til_data['category']
-        relative_path = file_path.replace(f"{self.base_path}/", "")
-        
-        new_entry = f"- [{date}] [{title}]({relative_path}) - `{category}`\n"
+
+        summary_text = f" - {summary}" if summary else ""
+        new_entry = f"| {date} | [{title}]({file_path}) | `{category}` |{summary_text}"
         
         try:
             # 기존 README 읽기
@@ -53,18 +53,19 @@ class GitHubHandler:
             else:
                 content = self._create_readme_template()
             
-            # "## 최근 학습 기록" 섹션 찾아서 새 항목 추가
+            # "## 최근 학습 기록" 테이블에 새 항목 추가
             if "## 최근 학습 기록" in content:
                 lines = content.split('\n')
                 insert_idx = None
-                
+
                 for i, line in enumerate(lines):
                     if line.startswith("## 최근 학습 기록"):
-                        insert_idx = i + 2  # 헤더 다음 줄
+                        # 테이블 헤더(2줄) 다음에 삽입
+                        insert_idx = i + 4
                         break
-                
+
                 if insert_idx:
-                    lines.insert(insert_idx, new_entry.rstrip())
+                    lines.insert(insert_idx, new_entry)
                     content = '\n'.join(lines)
             
             # 저장
