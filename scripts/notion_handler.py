@@ -165,6 +165,12 @@ class NotionHandler:
                 text = self._extract_rich_text(block["to_do"]["rich_text"])
                 checked = "x" if block["to_do"]["checked"] else " "
                 markdown_lines.append(f"- [{checked}] {text}")
+
+            elif block_type == "image":
+                caption = self._extract_rich_text(block["image"].get("caption", []))
+                caption_text = f" - {caption}" if caption else ""
+                markdown_lines.append(f"![이미지{caption_text}]()")
+                markdown_lines.append("")
         
         return "\n".join(markdown_lines)
     
