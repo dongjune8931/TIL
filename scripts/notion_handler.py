@@ -11,27 +11,15 @@ class NotionHandler:
         self.database_id = database_id
     
     def get_today_pages(self):
-        """오늘 작성완료 상태인 페이지들 가져오기"""
-        today = datetime.now().strftime("%Y-%m-%d")
-        
+        """작성완료 상태인 페이지들 가져오기"""
         try:
             response = self.client.databases.query(
                 database_id=self.database_id,
                 filter={
-                    "and": [
-                        {
-                            "property": "날짜",
-                            "date": {
-                                "equals": today
-                            }
-                        },
-                        {
-                            "property": "상태",
-                            "select": {
-                                "equals": "작성완료"
-                            }
-                        }
-                    ]
+                    "property": "상태",
+                    "select": {
+                        "equals": "작성완료"
+                    }
                 },
                 sorts=[
                     {
